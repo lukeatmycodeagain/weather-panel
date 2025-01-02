@@ -7,7 +7,15 @@ use std::error::Error;
 async fn handle_request(req: Request<Body>) -> Result<Response<Body>, Infallible> {
     // Create the response with CORS headers
     println!("Incoming request: {req:#?}");
-    let mut response = Response::new(Body::from("Hello, World from Rust and Luke!"));
+    let information = fetch_data().await;
+    let mut response: Response<Body>;
+    if let Ok(message) = information {
+        response = Response::new(Body::from(message));
+    }
+    else {
+        response = Response::new(Body::from("Oh fuck your data fetch failed"));
+    };
+
     response
         .headers_mut()
         .insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*".parse().unwrap());
@@ -25,7 +33,6 @@ static OPEN_WEATHER_API_KEY: &str = "628eed24f6e68a1416e17548105de0a4";
 
 async fn fetch_data() -> Result<String, Box<dyn Error>>
 {
-        // Create a Hyper client
         let lat = 51.049999;
         let lon = -114.066666;
         

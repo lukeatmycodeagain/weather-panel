@@ -12,7 +12,7 @@ const App = () => {
 
   return (
     <div>
-      <h1>Hello World Appv2</h1>
+      <h1>The Weather</h1>
       <p>{message ? message : 'Loading...'}</p>
     </div>
   );

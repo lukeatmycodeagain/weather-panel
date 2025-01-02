@@ -30,7 +30,7 @@ async fn fetch_data() -> Result<String, Box<dyn Error>>
         let lon = -114.066666;
         
         let api_url = format!(
-            "http://api.openweathermap.org/data/2.5/onecall?lat={}&lon={}&appid={}",
+            "http://api.openweathermap.org/data/3.0/onecall?lat={}&lon={}&appid={}",
             lat, lon, OPEN_WEATHER_API_KEY,
         );
     
@@ -68,7 +68,7 @@ async fn main() {
     
     let result = fetch_data().await;
     match result {
-        Ok(_thing) => println!("Success!!"),
+        Ok(thing) => println!("Success!! {thing:#?}"),
         Err(error) => println!("There is an error: {error}"),
     };
 

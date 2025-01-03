@@ -1,10 +1,11 @@
 FROM rust:latest AS builder
 
-
-
 WORKDIR /usr/src/app
 
-COPY . .
+COPY weather-server ./weather-server
+COPY weather-utils ./weather-utils
+
+WORKDIR /usr/src/app/weather-server
 
 RUN cargo fetch
 
@@ -16,11 +17,11 @@ RUN apt-get update && apt-get install -y \
     libssl-dev \
     openssl \
     && rm -rf /var/lib/apt/lists/*
-    
+
 ENV ROCKET_PORT="8000"
 ENV IS_CONTAINER="true"
 
-COPY --from=builder /usr/src/app/target/release/weather-server .
+COPY --from=builder /usr/src/app/weather-server/target/release/weather-server .
 
 EXPOSE 8000
 

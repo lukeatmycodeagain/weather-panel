@@ -1,0 +1,8 @@
+weather-server/target/
+weather-micro/target/
+weather-utils/target/
+*.git
+*.md
+*.log
+*.swp
+.env

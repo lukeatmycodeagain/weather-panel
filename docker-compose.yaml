@@ -1,0 +1,24 @@
+services:
+  weather-server:
+    build:
+      context: ./weather-server  # Directory of your weather-server app
+    ports:
+      - "8000:8000"  # Mapping host port 8000 to container port 8000
+    environment:
+      - ROCKET_PORT=8000
+      - IS_CONTAINER=true
+    networks:
+      - weather-network
+
+  weather-microservice:
+    build:
+      context: ./weather-micro  # Directory of your weather-microservice app
+    ports:
+      - "8080:8080"  # Mapping host port 8080 to container port 8080
+    networks:
+      - weather-network
+
+networks:
+  weather-network:
+    driver: bridge
+    

@@ -1,5 +1,5 @@
 [package]
-name = "weather-backend"
+name = "weather-micro"
 version = "0.1.0"
 edition = "2021"
 

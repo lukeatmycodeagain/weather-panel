@@ -79,9 +79,9 @@ async fn main() {
         Err(error) => println!("There is an error: {error}"),
     };
 
-    println!("Server running at http://127.0.0.1:8080");
+    println!("Microservice running at http://127.0.0.1:8080");
 
     if let Err(e) = server.await {
-        eprintln!("Server error: {}", e);
+        eprintln!("Microservice error: {}", e);
     }
 }

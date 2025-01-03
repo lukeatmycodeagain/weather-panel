@@ -2,6 +2,7 @@ use std::{
     env,
     net::{IpAddr, Ipv4Addr},
 };
+use reqwest;
 
 #[macro_use]
 extern crate rocket;
@@ -12,8 +13,19 @@ fn index() -> &'static str {
 }
 
 #[get("/weather")]
-fn weather() -> &'static str {
-    "Hello, weather!"
+async fn weather() -> Result<String, String> {
+    // Make a request to the microservice's weather endpoint
+    let client = reqwest::Client::new();
+    let url = "http://127.0.0.1:8080"; // Adjust the URL based on your Docker Compose setup
+    let response = client.get(url).send().await;
+
+    match response {
+        Ok(res) if res.status().is_success() => {
+            let body = res.text().await.unwrap_or_else(|_| "Failed to parse response".to_string());
+            Ok(body)
+        }
+        _ => Err("Failed to fetch weather data".to_string()),
+    }
 }
 
 #[launch]

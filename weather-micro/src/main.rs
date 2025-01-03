@@ -55,7 +55,8 @@ async fn fetch_data() -> Result<String, Box<dyn Error>>
             return Err(format!("API call failed with status: {}", res.status()).into());
         } 
 
-        
+        //let mut test_string: String = String::new();
+        //test_string = "This is a test string".to_string();
         // Read the body of the response
         let body_bytes = to_bytes(res.into_body()).await?;
         let response_string = String::from_utf8(body_bytes.to_vec())?;        

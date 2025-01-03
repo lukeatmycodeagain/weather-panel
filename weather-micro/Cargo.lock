@@ -488,7 +488,12 @@ version = "0.1.0"
 dependencies = [
  "hyper",
  "tokio",
+ "weather-utils",
 ]
+
+[[package]]
+name = "weather-utils"
+version = "0.1.0"
 
 [[package]]
 name = "windows-sys"

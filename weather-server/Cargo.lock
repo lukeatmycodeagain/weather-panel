@@ -2148,7 +2148,12 @@ dependencies = [
  "hyper 1.5.2",
  "reqwest",
  "rocket",
+ "weather-utils",
 ]
+
+[[package]]
+name = "weather-utils"
+version = "0.1.0"
 
 [[package]]
 name = "web-sys"

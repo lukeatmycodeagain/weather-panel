@@ -1,5 +1,7 @@
 FROM rust:latest AS builder
 
+
+
 WORKDIR /usr/src/app
 
 COPY . .
@@ -10,6 +12,11 @@ RUN cargo build --release
 
 FROM debian:bookworm-slim
 
+RUN apt-get update && apt-get install -y \
+    libssl-dev \
+    openssl \
+    && rm -rf /var/lib/apt/lists/*
+    
 ENV ROCKET_PORT="8000"
 ENV IS_CONTAINER="true"
 

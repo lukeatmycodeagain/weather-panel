@@ -9,6 +9,8 @@ services:
       - IS_CONTAINER=true
     networks:
       - weather-network
+    env_file:
+      - .env
 
   weather-microservice:
     build:
@@ -17,6 +19,8 @@ services:
       - "8080:8080"  # Mapping host port 8080 to container port 8080
     networks:
       - weather-network
+    env_file:
+      - .env
 
 networks:
   weather-network:

@@ -3,8 +3,12 @@ use std::{
     net::{IpAddr, Ipv4Addr},
 };
 
-struct Weather{
-    
+use serde::{Serialize, Deserialize};
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Weather{
+    pub time: String,
+    pub temperature: f64
 }
 
 pub fn ip_configuration() -> IpAddr {
@@ -29,6 +33,11 @@ pub fn port_from_env(key: &str, default_port: u16) -> u16 {
         .unwrap_or_else(|_| default_port.to_string())
         .parse::<u16>()
         .unwrap_or(default_port)
+}
+
+pub fn endpoint_from_env(key: &str, default_endpoint: String) -> String {
+    env::var(key)
+        .unwrap_or_else(|_| default_endpoint)
 }
 
 #[cfg(test)]

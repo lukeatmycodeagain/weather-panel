@@ -18,11 +18,13 @@ enum Microservice {
 
 #[get("/weather")]
 async fn weather() -> Result<String, String> {
-    let (address, port) = get_microservice_endpoint(Microservice::Weather);
-    // Make a request to the microservice's weather endpoint
+    let endpoint = microservice_endpoint(Microservice::Weather);
+    
+    println!("Requesting weather from {endpoint}");
+
+    // Make a request to the microservice's endpoint
     let client = reqwest::Client::new();
-    let url = format!("{}:{}", address, port); // Adjust the URL based on your Docker Compose setup
-    let response = client.get(url).send().await;
+    let response = client.get(&endpoint).send().await;
 
     match response {
         Ok(res) if res.status().is_success() => {
@@ -30,6 +32,7 @@ async fn weather() -> Result<String, String> {
                 .text()
                 .await
                 .unwrap_or_else(|_| "Failed to parse response".to_string());
+            println!("Body: {body}");
             Ok(body)
         }
         _ => Err("Failed to fetch weather data".to_string()),
@@ -58,20 +61,21 @@ fn server_config() -> (IpAddr, u16) {
     (address, port)
 }
 
-fn get_microservice_endpoint(service: Microservice) -> (IpAddr, u16) {
+fn microservice_endpoint(service: Microservice) -> String {
     match service {
-        Microservice::Weather => get_weather_endpoint(),
+        Microservice::Weather => weather_endpoint(),
         Microservice::_NotImplemented => default_endpoint(),
     }
 }
 
-fn get_weather_endpoint() -> (IpAddr, u16) {
+fn weather_endpoint() -> String {
     let address = weather_utils::ip_configuration();
     // Set the port using the WEATHER_MICROSERVICE_PORT environment variable, defaulting to 8080 if not set
     let port = weather_utils::port_from_env("WEATHER_MICROSERVICE_PORT", 8080);
-    (address, port)
+    let endpoint = weather_utils::endpoint_from_env("WEATHER_MICROSERVICE_URL", format!("{address}:{port}"));
+    endpoint
 }
 
-fn default_endpoint() -> (IpAddr, u16) {
-    (IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), 8000)
+fn default_endpoint() -> String {
+    format!("{}:{}",IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), 8000)
 }

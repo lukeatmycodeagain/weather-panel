@@ -1,32 +1,43 @@
 use hyper::body::to_bytes;
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{header, Body, Client, Request, Response, Server, Uri};
+use serde_json::Value;
 use std::convert::Infallible;
 use std::env;
 use std::error::Error;
+use std::net::SocketAddr;
+use weather_utils::Weather;
 
 async fn handle_request(req: Request<Body>) -> Result<Response<Body>, Infallible> {
-    // Create the response with CORS headers
-    println!("Incoming request: {req:#?}");
-    let information = fetch_data().await;
-    let mut response: Response<Body>;
-    if let Ok(message) = information {
-        response = Response::new(Body::from(message));
-    } else {
-        response = Response::new(Body::from("Oh fuck your data fetch failed"));
-    };
+    // Handle only `/` requests for weather data
+    if req.uri().path() == "/" {
+        let information = fetch_data().await;
+        let mut response: Response<Body>;
+        if let Ok(message) = information {
+            println!("message: {message}");
+            response = Response::new(Body::from(message));
+        } else {
+            response = Response::new(Body::from("Data fetch failed"));
+        };
 
-    response
-        .headers_mut()
-        .insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*".parse().unwrap());
-    response.headers_mut().insert(
-        header::ACCESS_CONTROL_ALLOW_HEADERS,
-        "Content-Type".parse().unwrap(),
-    );
-    response
-        .headers_mut()
-        .insert(header::ACCESS_CONTROL_ALLOW_METHODS, "GET".parse().unwrap());
-    Ok(response)
+        response
+            .headers_mut()
+            .insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*".parse().unwrap());
+        response.headers_mut().insert(
+            header::ACCESS_CONTROL_ALLOW_HEADERS,
+            "Content-Type".parse().unwrap(),
+        );
+        response
+            .headers_mut()
+            .insert(header::ACCESS_CONTROL_ALLOW_METHODS, "GET".parse().unwrap());
+        return Ok(response);
+    }
+
+    // Respond with 404 for unknown routes
+    Ok(Response::builder()
+        .status(404)
+        .body(Body::from("Not Found"))
+        .unwrap())
 }
 
 async fn fetch_data() -> Result<String, Box<dyn Error>> {
@@ -37,11 +48,11 @@ async fn fetch_data() -> Result<String, Box<dyn Error>> {
         .unwrap_or_else(|_| String::new())
         .parse::<String>()
         .unwrap_or("bigproblem".to_string());
-    
+
     print!("Key is {api_key}");
-    
+
     let api_url = format!(
-        "http://api.openweathermap.org/data/3.0/onecall?lat={}&lon={}&appid={}",
+        "http://api.openweathermap.org/data/3.0/onecall?lat={}&lon={}&appid={}&exclude=minutely",
         lat, lon, api_key,
     );
 
@@ -63,11 +74,14 @@ async fn fetch_data() -> Result<String, Box<dyn Error>> {
     //test_string = "This is a test string".to_string();
     // Read the body of the response
     let body_bytes = to_bytes(res.into_body()).await?;
-    let response_string = String::from_utf8(body_bytes.to_vec())?;
-    // Print the JSON response
-    //println!("Weather Data: {}", serde_json::to_string_pretty(&json)?);
-
-    Ok(response_string)
+    let external_data: Value = serde_json::from_slice(&body_bytes)?;
+    let weather = Weather {
+        time: external_data["current"]["dt"].to_string(),
+        temperature: external_data["current"]["temp"].as_f64().unwrap_or(0.0),
+    };
+    println!("Weather Data: {}", serde_json::to_string_pretty(&weather)?);
+    let weather_json = serde_json::to_string(&weather)?;
+    Ok(weather_json)
 }
 
 #[tokio::main]

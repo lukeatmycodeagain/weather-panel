@@ -72,9 +72,12 @@ async fn fetch_data() -> Result<String, Box<dyn Error>> {
 
 #[tokio::main]
 async fn main() {
+    let address = weather_utils::ip_configuration();
+    let port = weather_utils::port_from_env("WEATHER_MICROSERVICE_PORT", 8080);
+
     let make_svc =
         make_service_fn(|_conn| async { Ok::<_, Infallible>(service_fn(handle_request)) });
-    let addr = ([127, 0, 0, 1], 8080).into();
+    let addr = (address, port).into();
 
     let server = Server::bind(&addr).serve(make_svc);
 
@@ -84,7 +87,7 @@ async fn main() {
         Err(error) => println!("There is an error: {error}"),
     };
 
-    println!("Microservice running at http://127.0.0.1:8080");
+    println!("Weather Microservice running at {}:{}", address, port);
 
     if let Err(e) = server.await {
         eprintln!("Microservice error: {}", e);

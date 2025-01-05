@@ -8,4 +8,5 @@ weather-utils = {path = "../weather-utils" }
 hyper = { version = "1.5.2", features = ["full"] }
 reqwest = "0.12.12"
 rocket = "0.5.1"
+rocket_dyn_templates = { version = "0.1.0", features = ["handlebars", "tera"] }
 dotenvy = "0.15.7"

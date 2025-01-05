@@ -3,13 +3,10 @@ use std::{
     net::{IpAddr, Ipv4Addr},
 };
 
-use serde::{Serialize, Deserialize};
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Weather{
-    pub time: String,
-    pub temperature: f64
-}
+// shared data models
+pub mod models;
+pub use models::Person;
+pub use models::Weather;
 
 pub fn ip_configuration() -> IpAddr {
     let is_container = env::var("IS_CONTAINER")

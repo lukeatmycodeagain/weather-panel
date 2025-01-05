@@ -1,20 +1,32 @@
-use reqwest;
-use std::net::{IpAddr, Ipv4Addr};
-
-use weather_utils;
-
 #[macro_use]
 extern crate rocket;
+
+use reqwest;
+use std::net::{IpAddr, Ipv4Addr};
+use dotenvy::dotenv;
+use weather_utils;
+use rocket::fs::NamedFile;
+
+enum Microservice {
+    Weather,
+    _NotImplemented,
+}
+
+#[catch(404)]
+fn not_found() -> &'static str {
+    "Page not found"
+}
+
+/* #[get("/favicon.ico")]
+fn favicon() -> rocket::response::NamedFile {
+    rocket::response::NamedFile::open("favicon/favicon.ico").unwrap() // Adjust the path accordingly
+} */
 
 #[get("/")]
 fn index() -> &'static str {
     "Hello, luke!"
 }
 
-enum Microservice {
-    Weather,
-    _NotImplemented,
-}
 
 #[get("/weather")]
 async fn weather() -> Result<String, String> {
@@ -41,11 +53,13 @@ async fn weather() -> Result<String, String> {
 
 #[launch]
 fn rocket() -> _ {
+    dotenv().ok();
     // Check if the app is running inside a container using the IS_CONTAINER environment variable
     let (address, port) = server_config();
     println!("Binding to {}:{}", address, port);
     rocket::build()
         .mount("/", routes![index, weather])
+        .register("/", catchers![not_found])
         .mount("/api", routes![weather])
         .configure(rocket::Config {
             address,
@@ -69,10 +83,12 @@ fn microservice_endpoint(service: Microservice) -> String {
 }
 
 fn weather_endpoint() -> String {
-    let address = weather_utils::ip_configuration();
     // Set the port using the WEATHER_MICROSERVICE_PORT environment variable, defaulting to 8080 if not set
     let port = weather_utils::port_from_env("WEATHER_MICROSERVICE_PORT", 8080);
-    let endpoint = weather_utils::endpoint_from_env("WEATHER_MICROSERVICE_URL", format!("{address}:{port}"));
+    println!("The weather endpoint port is {port}");
+    let address = weather_utils::endpoint_from_env("WEATHER_MICROSERVICE_URL", format!("http://localhost"));
+    println!("The weather endpoint address is {address}");
+    let endpoint = format!("{address}:{port}");
     endpoint
 }
 

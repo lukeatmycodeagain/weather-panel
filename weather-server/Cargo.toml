@@ -8,3 +8,4 @@ weather-utils = {path = "../weather-utils" }
 hyper = { version = "1.5.2", features = ["full"] }
 reqwest = "0.12.12"
 rocket = "0.5.1"
+dotenvy = "0.15.7"

@@ -4,9 +4,10 @@ services:
       context: ./
       dockerfile: ./weather-server/Dockerfile  
     ports:
-      - "8000:8000" 
+      - "${ROCKET_PORT}:${ROCKET_PORT}" 
     environment:
       - IS_CONTAINER=true
+      - WEATHER_MICROSERVICE_URL=http://weather-microservice
     networks:
       - weather-network
     env_file:
@@ -17,7 +18,7 @@ services:
       context: ./
       dockerfile: ./weather-micro/Dockerfile    
     ports:
-      - "8080:8080"
+      - "${WEATHER_MICROSERVICE_PORT}:${WEATHER_MICROSERVICE_PORT}" 
     networks:
       - weather-network
     env_file:

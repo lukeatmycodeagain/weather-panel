@@ -5,8 +5,8 @@ use serde_json::Value;
 use std::convert::Infallible;
 use std::env;
 use std::error::Error;
-use std::net::SocketAddr;
 use weather_utils::Weather;
+use dotenvy::dotenv;
 
 async fn handle_request(req: Request<Body>) -> Result<Response<Body>, Infallible> {
     // Handle only `/` requests for weather data
@@ -44,12 +44,9 @@ async fn fetch_data() -> Result<String, Box<dyn Error>> {
     let lat = 51.049999;
     let lon = -114.066666;
 
-    let api_key = env::var("OPEN_WEATHER_API")
-        .unwrap_or_else(|_| String::new())
-        .parse::<String>()
-        .unwrap_or("bigproblem".to_string());
+    let api_key = env::var("OPEN_WEATHER_API").unwrap_or_else(|_| "bigproblem".to_string());
 
-    print!("Key is {api_key}");
+    println!("Key is {api_key}");
 
     let api_url = format!(
         "http://api.openweathermap.org/data/3.0/onecall?lat={}&lon={}&appid={}&exclude=minutely",
@@ -86,6 +83,7 @@ async fn fetch_data() -> Result<String, Box<dyn Error>> {
 
 #[tokio::main]
 async fn main() {
+    dotenv().ok();
     let address = weather_utils::ip_configuration();
     let port = weather_utils::port_from_env("WEATHER_MICROSERVICE_PORT", 8080);
 

@@ -32,7 +32,7 @@ fn rocket() -> _ {
                 Options::Missing | Options::NormalizeDirs,
             ),
         )
-        .mount("/", routes![root, weather, create_weather_query])
+        .mount("/", routes![root, weather, create_weather_query, display_weather])
         //.mount("/weather", routes![weather, create_weather_query]) // TODO: Figure out why this doesn't
         .register("/", catchers![not_found])
         .configure(rocket::Config {
@@ -79,14 +79,18 @@ async fn weather() -> Template {
 
 #[post("/weather", data = "<form>")]
 async fn create_weather_query(form: Form<Contextual<'_, WeatherQuery>>) -> Result<Flash<Redirect>, Template> {
-    println!("Lets get it");
     if let Some(ref query) = form.value {
-        //let name = format!("{} {}", "query.latitude", "query.longitude");
+        println!("Query connected data successful {} {}", query.latitude, query.longitude);
+        let redirect_url = uri!(display_weather(query.latitude, query.longitude));
+        print!("Redirecting to: {redirect_url}");
         let message = Flash::success(
-            Redirect::to(uri!(display_weather(query.latitude, query.longitude))),
+            Redirect::to(redirect_url),
             "It Worked",
         );
         return Ok(message);
+    } 
+    else {
+        println!("Form wasn't valid");
     }
 
     let error_messages: Vec<String> = form
@@ -113,8 +117,9 @@ async fn create_weather_query(form: Form<Contextual<'_, WeatherQuery>>) -> Resul
 
 #[get("/weather?<lat>&<long>")]
 async fn display_weather(lat: f64, long: f64, flash: Option<FlashMessage<'_>>) -> Template {
+    println!("Received coordinates: Latitude: {}, Longitude: {}", lat, long);
     let message = flash.map_or_else(|| String::default(), |msg| msg.message().to_string());
-    Template::render("weather_view", context! { lat , long })
+    Template::render("weather_view", context! { lat , long, message })
 }
 
 fn server_config() -> (IpAddr, u16) {

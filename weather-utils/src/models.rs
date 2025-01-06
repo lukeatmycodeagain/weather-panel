@@ -1,7 +1,9 @@
 use rocket::form::{self, Error};
 use rocket::FromForm;
+use serde::{Deserialize, Serialize};
 
-#[derive(FromForm, Debug)]
+
+#[derive(FromForm, Debug, Serialize, Deserialize)]
 pub struct WeatherQuery {
     #[field(validate = validate_latitude())]
     pub latitude: f64,
@@ -25,7 +27,7 @@ fn validate_longitude<'v>(long: &f64) -> form::Result<'v, ()> {
     }
 }
 
-use serde::{Deserialize, Serialize};
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Weather {
     pub time: String,

@@ -3,15 +3,15 @@ extern crate rocket;
 
 use dotenvy::dotenv;
 use reqwest;
-use std::net::{IpAddr, Ipv4Addr};
-use weather_utils::Weather;
-use weather_utils::WeatherQuery;
-
 use rocket::form::{Contextual, Form};
 use rocket::fs::{relative, FileServer, Options};
 use rocket::response::{Flash, Redirect};
 use rocket::{get, launch, post, routes, uri};
 use rocket_dyn_templates::{context, Template};
+use serde_json;
+use std::net::{IpAddr, Ipv4Addr};
+use weather_utils::Weather;
+use weather_utils::WeatherQuery;
 
 enum Microservice {
     Weather,
@@ -60,7 +60,6 @@ fn favicon() -> rocket::response::NamedFile {
 } */
 #[get("/weather")]
 async fn weather() -> Template {
-    
     Template::render(
         "weather",
         context! { title: "Weather", longitude: "", longitude_error:"", latitude:"", latitude_error: "", lat: "", long: "", message: ""},
@@ -98,7 +97,7 @@ async fn create_weather_query(
             latitude_error : form.context.field_errors("latitude").count() > 0,
             longitude_error : form.context.field_errors("longitude").count() > 0,
             errors: error_messages,
-            lat: "", 
+            lat: "",
             long: "",
             message: "",
         },
@@ -107,12 +106,25 @@ async fn create_weather_query(
 
 #[get("/weather?<lat>&<long>")]
 async fn display_weather(lat: f64, long: f64) -> Template {
-    // TODO: Fetch weather data here instead
     let endpoint = microservice_endpoint(Microservice::Weather);
+
+    // back to a query object for easy serialization, not optimal, but quickly accommplished
+    let weather_query = WeatherQuery {
+        latitude: lat,
+        longitude: long,
+    };
+    let json_body = serde_json::to_string(&weather_query).unwrap();
 
     // Make a request to the microservice's endpoint
     let client = reqwest::Client::new();
-    let response = client.get(&endpoint).send().await;
+    println!("Query body: {:#?}", json_body);
+    let response = client
+        .post(&endpoint) // Use POST to deliver json to handler in the microservice
+        .header("Content-Type", "application/json")
+        .body(json_body)
+        .send()
+        .await;
+
     match response {
         Ok(res) if res.status().is_success() => {
             let body = res
@@ -122,15 +134,17 @@ async fn display_weather(lat: f64, long: f64) -> Template {
             println!("got a good request baack: {body}");
             Template::render(
                 "weather",
-                context! { title: "Weather", longitude: "", longitude_error:"", latitude:"", latitude_error: "", lat: lat, long: long, message: &body})
+                context! { title: "Weather", longitude: "", longitude_error:"", latitude:"", latitude_error: "", lat: lat, long: long, message: &body},
+            )
         }
-        _ =>{
+        _ => {
             println!("got a bad request baack!!");
 
-         Template::render(
-            "weather",
-            context! { title: "Weather", longitude: "", longitude_error:"", latitude:"", latitude_error: "", lat: lat, long: long, message: ""}
-        )}
+            Template::render(
+                "weather",
+                context! { title: "Weather", longitude: "", longitude_error:"", latitude:"", latitude_error: "", lat: lat, long: long, message: ""},
+            )
+        }
     }
 }
 

@@ -10,3 +10,5 @@ reqwest = "0.12.12"
 rocket = "0.5.1"
 rocket_dyn_templates = { version = "0.1.0", features = ["handlebars", "tera"] }
 dotenvy = "0.15.7"
+serde = "1.0.217"
+serde_json = "1.0.134"

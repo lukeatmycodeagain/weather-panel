@@ -46,7 +46,7 @@ fn rocket() -> _ {
 
 #[get("/")]
 async fn root() -> Template {
-    Template::render("root", context! { message: "Hello, from Luke"})
+    Template::render("root", context! { message: "My Projects"})
 }
 
 #[catch(404)]
@@ -99,6 +99,7 @@ async fn create_weather_query(
             errors: error_messages,
             lat: "",
             long: "",
+            weather: {},
             message: "",
         },
     ))
@@ -117,7 +118,6 @@ async fn display_weather(lat: f64, long: f64) -> Template {
 
     // Make a request to the microservice's endpoint
     let client = reqwest::Client::new();
-    println!("Query body: {:#?}", json_body);
     let response = client
         .post(&endpoint) // Use POST to deliver json to handler in the microservice
         .header("Content-Type", "application/json")
@@ -131,18 +131,54 @@ async fn display_weather(lat: f64, long: f64) -> Template {
                 .text()
                 .await
                 .unwrap_or_else(|_| "Failed to parse response".to_string());
-            println!("got a good request baack: {body}");
-            Template::render(
-                "weather",
-                context! { title: "Weather", longitude: "", longitude_error:"", latitude:"", latitude_error: "", lat: lat, long: long, message: &body},
-            )
+            let weather: Result<Weather, _> = serde_json::from_str(&body);
+            match weather {
+                Ok(weather_data) => Template::render(
+                    "weather",
+                    context! {
+                        title: "Weather",
+                        longitude: "",
+                        longitude_error:"",
+                        latitude:"",
+                        latitude_error: "",
+                        lat: lat,
+                        long: long,
+                        weather: weather_data,
+                        message: "Successful!"
+                    },
+                ),
+                Err(_) => Template::render(
+                    "weather",
+                    context! {
+                        title: "Weather",
+                        longitude: "",
+                        longitude_error: "",
+                        latitude: "",
+                        latitude_error: "",
+                        lat: lat,
+                        long: long,
+                        weather: {},
+                        message: "Failed to parse weather data as JSON"
+                    },
+                ),
+            }
         }
         _ => {
-            println!("got a bad request baack!!");
+            println!("got a bad request back!!");
 
             Template::render(
                 "weather",
-                context! { title: "Weather", longitude: "", longitude_error:"", latitude:"", latitude_error: "", lat: lat, long: long, message: ""},
+                context! {
+                    title: "Weather",
+                    longitude: "",
+                    longitude_error: "",
+                    latitude: "",
+                    latitude_error: "",
+                    lat: lat,
+                    long: long,
+                    weather: {},
+                    message: "Unsuccessful response"
+                },
             )
         }
     }

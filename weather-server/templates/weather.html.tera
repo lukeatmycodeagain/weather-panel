@@ -1,5 +1,5 @@
 {% extends "layouts/main" %} {% block content %}
-    <h1>What's the weather like?</h1>
+    <h1>What's the weather like in... </h1>
     
     {% include "components/error_display" %}
     {% include "components/weather_query" %}

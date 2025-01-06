@@ -13,5 +13,5 @@
                aria-invalid="{{ longitude_error }}"
         />
         
-        <button type="submit">View Weather</button>
-    </form>
+       <button type="submit">View Weather</button>
+</form>

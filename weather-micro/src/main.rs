@@ -1,3 +1,4 @@
+use chrono::DateTime;
 use dotenvy::dotenv;
 use hyper::body::to_bytes;
 use hyper::service::{make_service_fn, service_fn};
@@ -90,7 +91,7 @@ async fn handle_weather_query(query: weather_utils::WeatherQuery) -> Result<Weat
     };
 
     let weather = Weather {
-        time: external_data["current"]["dt"].to_string(),
+        time: convert_to_human(external_data["current"]["dt"].to_string()),
         temperature: external_data["current"]["temp"]
             .as_f64()
             .ok_or("Missing temperature")?,
@@ -98,6 +99,20 @@ async fn handle_weather_query(query: weather_utils::WeatherQuery) -> Result<Weat
     };
 
     Ok(weather)
+}
+
+fn convert_to_human(unix_time: String) -> String {
+    let unix_seconds: i64 = unix_time.parse().unwrap_or(0); // Example Unix timestamp (in seconds)
+
+    // Convert Unix seconds to chrono types
+    let datetime = DateTime::from_timestamp(unix_seconds, 0);
+
+    // Format the datetime as a human-readable string
+    if let Some(formatted_time) = datetime {
+        return formatted_time.format("%Y-%m-%d %H:%M:%S").to_string();
+    } else {
+        return "Current Time Failed to convert".to_string();
+    }
 }
 
 async fn get_location_name(
@@ -121,7 +136,7 @@ async fn get_location_name(
     let external_data: Value = serde_json::from_slice(&body_bytes).map_err(|e| e.to_string())?;
     if let Some(result) = external_data.as_array() {
         if result.is_empty() {
-            return Ok("...I dunno, the ocean or a desert maybe?".to_string())
+            return Ok("... I dunno, the ocean or a desert maybe?".to_string());
         } else {
             let location_name = result[0]["name"].to_string();
             return Ok(location_name);

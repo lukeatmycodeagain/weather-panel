@@ -1,24 +1,39 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="color-scheme" content="light dark"/>
+    <meta name="color-scheme" content="light dark" />
     <link rel="stylesheet" href="/public/css/pico.min.css">
+    <link rel="stylesheet" href="/public/css/styles.css">
     <title>A Project by Luke Kissick</title>
 </head>
+
 <body>
     <header>
-        <aside>
         <nav class="container">
             <ul>
-            <li><a href="/">Home</a></li>
-            <li><a href="/weather">Weather</a></li>
+                <li><strong><a href="https://github.com/lukeatmycodeagain">My Github</a> </strong></li>
+            </ul>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li>
+                    <details class="dropdown">
+                        <summary>
+                           Projects
+                        </summary>
+                        <ul dir="rtl">
+                            <li><a href="/weather">Weather</a></li>
+                        </ul>
+                    </details>
+                </li>
             </ul>
         </nav>
-    </aside>
+
+
     </header>
-    
+
     <main class="container">
         {% block content %}{% endblock %}
     </main>
@@ -27,4 +42,5 @@
         <p>&copy; 2025 Luke Kissick</p>
     </footer>
 </body>
+
 </html>

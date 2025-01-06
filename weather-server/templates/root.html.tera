@@ -1,7 +1,7 @@
 {% extends "layouts/main" %} {% block content %}
-        <h1>{{message}}</h1>
+<h1>{{message}}</h1>
 
-        <form method="GET" action="/weather">
-            <button type="submit">Weather App</button>
-        </form>
+<form method="GET" action="/weather">
+    <button type="submit">Weather App</button>
+</form>
 {% endblock content %}

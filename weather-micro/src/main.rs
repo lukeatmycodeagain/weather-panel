@@ -1,4 +1,4 @@
-use chrono::DateTime;
+use chrono::{DateTime, Local};
 use dotenvy::dotenv;
 use hyper::body::to_bytes;
 use hyper::service::{make_service_fn, service_fn};
@@ -6,6 +6,9 @@ use hyper::{header, Body, Client, Request, Response, Server, Uri};
 use serde_json::Value;
 use std::convert::Infallible;
 use weather_utils::Weather;
+
+use std::fs::File;
+use std::io::Write;
 
 // Rust has cooler enums than C++
 #[derive(serde::Deserialize, Debug)]
@@ -81,7 +84,6 @@ async fn handle_weather_query(query: weather_utils::WeatherQuery) -> Result<Weat
 
     let body_bytes = to_bytes(res.into_body()).await.map_err(|e| e.to_string())?;
     let external_data: Value = serde_json::from_slice(&body_bytes).map_err(|e| e.to_string())?;
-
     let location_name = match get_location_name(api_key, query.latitude, query.longitude).await {
         Ok(name) => name,
         Err(message) => {
@@ -89,16 +91,19 @@ async fn handle_weather_query(query: weather_utils::WeatherQuery) -> Result<Weat
             "Unknown Place".to_string()
         }
     };
-
-    let weather = Weather {
-        time: convert_to_human(external_data["current"]["dt"].to_string()),
-        temperature: external_data["current"]["temp"]
-            .as_f64()
-            .ok_or("Missing temperature")?,
-        location_name: location_name,
-    };
+    let weather = pack_weather(external_data, location_name);
 
     Ok(weather)
+}
+
+fn pack_weather(data: Value, location: String) -> Weather {
+    return Weather {
+        time: convert_to_human(data["current"]["dt"].to_string()),
+        temperature: data["current"]["temp"].as_f64().unwrap_or_default(),
+        feels_like: data["current"]["feels_like"].as_f64().unwrap_or_default(),
+        location_name: location,
+        description: data["daily"][0]["summary"].to_string().trim().trim_matches('"').to_string(),
+    };
 }
 
 fn convert_to_human(unix_time: String) -> String {
@@ -106,10 +111,9 @@ fn convert_to_human(unix_time: String) -> String {
 
     // Convert Unix seconds to chrono types
     let datetime = DateTime::from_timestamp(unix_seconds, 0);
-
-    // Format the datetime as a human-readable string
-    if let Some(formatted_time) = datetime {
-        return formatted_time.format("%Y-%m-%d %H:%M:%S").to_string();
+    if let Some(utc_time) = datetime {
+        let local_time = utc_time.with_timezone(&Local);
+        return local_time.format("%r, %A %B %e %Y ").to_string();
     } else {
         return "Current Time Failed to convert".to_string();
     }
@@ -138,7 +142,8 @@ async fn get_location_name(
         if result.is_empty() {
             return Ok("... I dunno, the ocean or a desert maybe?".to_string());
         } else {
-            let location_name = result[0]["name"].to_string();
+            let location_trim = result[0]["name"].to_string().trim().trim_matches('"').to_string();
+            let location_name = format!("... {}", location_trim);
             return Ok(location_name);
         }
     } else {

@@ -1,36 +1,48 @@
 {% if lat %}
 <h2>{{weather.location_name}} (Lat: {{lat}}, Long: {{long}} )</h2>
 
-<h4>time: {{weather.time}}</h4>
+<h4>Current Conditions at {{weather.time}}</h4>
 <span role="group">
     <hgroup>
-        <span id="temperature" class="container">{{weather.temperature}}</span>
-        <h2>How to use CSS to add glam to your Website?</h2>
-      </hgroup>
-    
+        <h1 class="container"><span id="temperature">{{weather.temperature}}</span></h1>
+        <h2>Feels like <span id="feels_like">{{weather.feels_like}}</span></h2>
+    </hgroup>
+
     <!-- Buttons to switch temperature scale -->
     <button onclick="convertTemperature('C')">Celsius</button>
     <button onclick="convertTemperature('F')">Fahrenheit</button>
     <button onclick="convertTemperature('K')">Kelvin</button>
 </span>
+<h5 class="container">{{weather.description}}</h5>
 <!-- Include JavaScript to handle conversion -->
 <script>
     const kelvinTemperature = parseFloat("{{ weather.temperature }}");
+    const kelvinFeelsTemperature = parseFloat("{{ weather.feels_like }}");
     convertTemperature('C');
     function convertTemperature(scale) {
         let convertedTemp;
+        let convertedFeels;
         if (scale === 'C') {
             // Convert Kelvin to Celsius
             convertedTemp = kelvinTemperature - 273.15;
+            convertedFeels = kelvinFeelsTemperature - 273.15;
+
             document.getElementById('temperature').innerText = `${convertedTemp.toFixed(2)} °C`;
+            document.getElementById('feels_like').innerText = `${convertedTemp.toFixed(2)} °C`;
         } else if (scale === 'F') {
             // Convert Kelvin to Fahrenheit
             convertedTemp = (kelvinTemperature - 273.15) * 9 / 5 + 32;
+            convertedFeels = (kelvinFeelsTemperature - 273.15) * 9 / 5 + 32;
+
             document.getElementById('temperature').innerText = `${convertedTemp.toFixed(2)} °F`;
+            document.getElementById('feels_like').innerText = `${convertedFeels.toFixed(2)} °F`;
         } else if (scale === 'K') {
             // Convert Kelvin to Fahrenheit
             convertedTemp = kelvinTemperature;
+            convertedFeels = kelvinFeelsTemperature;
+
             document.getElementById('temperature').innerText = `${convertedTemp.toFixed(2)} K`;
+            document.getElementById('feels_like').innerText = `${convertedFeels.toFixed(2)} K`;
         }
     }
 </script>

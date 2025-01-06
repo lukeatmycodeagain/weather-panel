@@ -32,4 +32,5 @@ fn validate_longitude<'v>(long: &f64) -> form::Result<'v, ()> {
 pub struct Weather {
     pub time: String,
     pub temperature: f64,
+    pub location_name: String,
 }

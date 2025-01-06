@@ -9,11 +9,7 @@ pub use models::Weather;
 pub use models::WeatherQuery;
 
 pub fn ip_configuration() -> IpAddr {
-    let is_container = env::var("IS_CONTAINER")
-        .unwrap_or_else(|_| "false".to_string()) // Default to "false" if not set
-        .to_lowercase()
-        == "true"; // Compare case-insensitively
-
+    let is_container = get_env_var("IS_CONTAINER", false);
     println!("IS_CONTAINER: {}", is_container); // Debugging
 
     let address: IpAddr = if is_container {
@@ -25,24 +21,125 @@ pub fn ip_configuration() -> IpAddr {
     address
 }
 
-pub fn port_from_env(key: &str, default_port: u16) -> u16 {
+// generic for getting environment variables
+pub fn get_env_var<T: std::str::FromStr + ToString>(key: &str, default_value: T) -> T {
     env::var(key)
-        .unwrap_or_else(|_| default_port.to_string())
-        .parse::<u16>()
-        .unwrap_or(default_port)
-}
-
-pub fn endpoint_from_env(key: &str, default_endpoint: String) -> String {
-    env::var(key).unwrap_or_else(|_| default_endpoint)
+        .unwrap_or_else(|_| default_value.to_string()) // Get the variable as a string
+        .parse::<T>()  // Try parsing it to the correct type
+        .unwrap_or(default_value)  // If parsing fails, return the default value
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::env;
+
+    // Helper function to set and clear environment variables for testing
+    fn set_env_var(key: &str, value: &str) {
+        env::set_var(key, value);
+    }
+
+    fn clear_env_var(key: &str) {
+        env::remove_var(key);
+    }
 
     #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+    fn test_get_u16_env_var_existing() {
+        set_env_var("PORT", "8080");
+
+        let port: u16 = get_env_var("PORT", 3000);
+
+        assert_eq!(port, 8080);
+
+        clear_env_var("PORT");
+    }
+
+    #[test]
+    fn test_get_u16_env_var_missing() {
+        clear_env_var("PORT");
+
+        let port: u16 = get_env_var("PORT", 3000);
+
+        assert_eq!(port, 3000); // Default value is used
+
+        clear_env_var("PORT");
+    }
+
+    #[test]
+    fn test_get_u16_env_var_invalid() {
+        set_env_var("PORT", "invalid");
+
+        let port: u16 = get_env_var("PORT", 3000);
+
+        assert_eq!(port, 3000); // Default value is used due to parse failure
+
+        clear_env_var("PORT");
+    }
+
+    #[test]
+    fn test_get_string_env_var_existing() {
+        set_env_var("API_URL", "https://example.com");
+
+        let api_url: String = get_env_var("API_URL", "http://default.com".to_string());
+
+        assert_eq!(api_url, "https://example.com");
+
+        clear_env_var("API_URL");
+    }
+
+    #[test]
+    fn test_get_string_env_var_missing() {
+        clear_env_var("API_URL");
+
+        let api_url: String = get_env_var("API_URL", "http://default.com".to_string());
+
+        assert_eq!(api_url, "http://default.com"); // Default value is used
+
+        clear_env_var("API_URL");
+    }
+
+    #[test]
+    fn test_get_string_env_var_invalid() {
+        set_env_var("API_URL", "Not a valid URL");
+
+        let api_url: String = get_env_var("API_URL", "http://default.com".to_string());
+
+        assert_eq!(api_url, "Not a valid URL"); // Value is returned as is even if it's "invalid"
+
+        clear_env_var("API_URL");
+    }
+
+    // Testing for boolean values
+    #[test]
+    fn test_get_bool_env_var_existing() {
+        set_env_var("DEBUG", "true");
+
+        let debug: bool = get_env_var("DEBUG", false);
+
+        assert_eq!(debug, true);
+
+        clear_env_var("DEBUG");
+    }
+
+    #[test]
+    fn test_get_bool_env_var_missing() {
+        clear_env_var("DEBUG");
+
+        let debug: bool = get_env_var("DEBUG", false);
+
+        assert_eq!(debug, false); // Default value is used
+
+        clear_env_var("DEBUG");
+    }
+
+    #[test]
+    fn test_get_bool_env_var_invalid() {
+        set_env_var("DEBUG", "notabool");
+
+        let debug: bool = get_env_var("DEBUG", false);
+
+        assert_eq!(debug, false); // Default value is used due to parse failure
+
+        clear_env_var("DEBUG");
     }
 }

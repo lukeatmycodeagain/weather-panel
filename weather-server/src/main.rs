@@ -151,7 +151,7 @@ async fn display_weather(lat: f64, long: f64) -> Template {
 fn server_config() -> (IpAddr, u16) {
     let address = weather_utils::ip_configuration();
     // Set the port using the ROCKET_PORT environment variable, defaulting to 8000 if not set
-    let port = weather_utils::port_from_env("ROCKET_PORT", 8000);
+    let port: u16 = weather_utils::get_env_var("ROCKET_PORT", 8000);
     (address, port)
 }
 
@@ -164,9 +164,9 @@ fn microservice_endpoint(service: Microservice) -> String {
 
 fn weather_endpoint() -> String {
     // Set the port using the WEATHER_MICROSERVICE_PORT environment variable, defaulting to 8080 if not set
-    let port = weather_utils::port_from_env("WEATHER_MICROSERVICE_PORT", 8080);
-    let address =
-        weather_utils::endpoint_from_env("WEATHER_MICROSERVICE_URL", format!("http://localhost"));
+    let port: u16 = weather_utils::get_env_var("WEATHER_MICROSERVICE_PORT", 8080);
+    let address: String =
+        weather_utils::get_env_var("WEATHER_MICROSERVICE_URL", "http://localhost".to_string());
     let endpoint = format!("{address}:{port}");
     endpoint
 }

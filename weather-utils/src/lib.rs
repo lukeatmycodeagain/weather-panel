@@ -5,8 +5,8 @@ use std::{
 
 // shared data models
 pub mod models;
-pub use models::WeatherQuery;
 pub use models::Weather;
+pub use models::WeatherQuery;
 
 pub fn ip_configuration() -> IpAddr {
     let is_container = env::var("IS_CONTAINER")
@@ -33,8 +33,7 @@ pub fn port_from_env(key: &str, default_port: u16) -> u16 {
 }
 
 pub fn endpoint_from_env(key: &str, default_endpoint: String) -> String {
-    env::var(key)
-        .unwrap_or_else(|_| default_endpoint)
+    env::var(key).unwrap_or_else(|_| default_endpoint)
 }
 
 #[cfg(test)]

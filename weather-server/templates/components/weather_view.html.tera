@@ -1,4 +1,6 @@
+{% if lat %}
 <h2>Weather Information</h2>
 <p>Latitude: {{lat}}</p>
 <p>Longitude: {{long}}</p>
-<p>{{message}}</p>
+<p>message: {{message}}</p>
+{% endif %}

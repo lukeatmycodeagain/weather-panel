@@ -9,7 +9,6 @@ use weather_utils::WeatherQuery;
 
 use rocket::form::{Contextual, Form};
 use rocket::fs::{relative, FileServer, Options};
-use rocket::request::FlashMessage;
 use rocket::response::{Flash, Redirect};
 use rocket::{get, launch, post, routes, uri};
 use rocket_dyn_templates::{context, Template};
@@ -32,7 +31,10 @@ fn rocket() -> _ {
                 Options::Missing | Options::NormalizeDirs,
             ),
         )
-        .mount("/", routes![root, weather, create_weather_query, display_weather])
+        .mount(
+            "/",
+            routes![root, weather, create_weather_query, display_weather],
+        )
         //.mount("/weather", routes![weather, create_weather_query]) // TODO: Figure out why this doesn't
         .register("/", catchers![not_found])
         .configure(rocket::Config {
@@ -56,40 +58,24 @@ fn not_found() -> &'static str {
 fn favicon() -> rocket::response::NamedFile {
     rocket::response::NamedFile::open("favicon/favicon.ico").unwrap() // Adjust the path accordingly
 } */
-
 #[get("/weather")]
 async fn weather() -> Template {
-    let endpoint = microservice_endpoint(Microservice::Weather);
-
-    // Make a request to the microservice's endpoint
-    let client = reqwest::Client::new();
-    let response = client.get(&endpoint).send().await;
-    match response {
-        Ok(res) if res.status().is_success() => {
-            let body = res
-                .text()
-                .await
-                .unwrap_or_else(|_| "Failed to parse response".to_string());
-            println!("Body: {body}");
-        }
-        _ => print!("Failed to fetch weather data"),
-    }
-    Template::render("weather", context! { title: "Weather"})
+    
+    Template::render(
+        "weather",
+        context! { title: "Weather", longitude: "", longitude_error:"", latitude:"", latitude_error: "", lat: "", long: "", message: ""},
+    )
 }
 
 #[post("/weather", data = "<form>")]
-async fn create_weather_query(form: Form<Contextual<'_, WeatherQuery>>) -> Result<Flash<Redirect>, Template> {
+async fn create_weather_query(
+    form: Form<Contextual<'_, WeatherQuery>>,
+) -> Result<Flash<Redirect>, Template> {
     if let Some(ref query) = form.value {
-        println!("Query connected data successful {} {}", query.latitude, query.longitude);
         let redirect_url = uri!(display_weather(query.latitude, query.longitude));
-        print!("Redirecting to: {redirect_url}");
-        let message = Flash::success(
-            Redirect::to(redirect_url),
-            "It Worked",
-        );
+        let message = Flash::success(Redirect::to(redirect_url), "It Worked");
         return Ok(message);
-    } 
-    else {
+    } else {
         println!("Form wasn't valid");
     }
 
@@ -106,20 +92,46 @@ async fn create_weather_query(form: Form<Contextual<'_, WeatherQuery>>) -> Resul
     Err(Template::render(
         "weather",
         context! {
+            title: "Weather",
             latitude : form.context.field_value("latitude"),
             longitude : form.context.field_value("longitude"),
             latitude_error : form.context.field_errors("latitude").count() > 0,
             longitude_error : form.context.field_errors("longitude").count() > 0,
-            errors: error_messages
+            errors: error_messages,
+            lat: "", 
+            long: "",
+            message: "",
         },
     ))
 }
 
 #[get("/weather?<lat>&<long>")]
-async fn display_weather(lat: f64, long: f64, flash: Option<FlashMessage<'_>>) -> Template {
-    println!("Received coordinates: Latitude: {}, Longitude: {}", lat, long);
-    let message = flash.map_or_else(|| String::default(), |msg| msg.message().to_string());
-    Template::render("weather_view", context! { lat , long, message })
+async fn display_weather(lat: f64, long: f64) -> Template {
+    // TODO: Fetch weather data here instead
+    let endpoint = microservice_endpoint(Microservice::Weather);
+
+    // Make a request to the microservice's endpoint
+    let client = reqwest::Client::new();
+    let response = client.get(&endpoint).send().await;
+    match response {
+        Ok(res) if res.status().is_success() => {
+            let body = res
+                .text()
+                .await
+                .unwrap_or_else(|_| "Failed to parse response".to_string());
+            println!("got a good request baack: {body}");
+            Template::render(
+                "weather",
+                context! { title: "Weather", longitude: "", longitude_error:"", latitude:"", latitude_error: "", lat: lat, long: long, message: &body})
+        }
+        _ =>{
+            println!("got a bad request baack!!");
+
+         Template::render(
+            "weather",
+            context! { title: "Weather", longitude: "", longitude_error:"", latitude:"", latitude_error: "", lat: lat, long: long, message: ""}
+        )}
+    }
 }
 
 fn server_config() -> (IpAddr, u16) {

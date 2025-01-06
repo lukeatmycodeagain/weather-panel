@@ -1,0 +1,11 @@
+{% if errors %}
+    <article>
+        <header>🥺Oh No!</header>
+        <p>There are some invalid fields in the form</p>
+        <ul>
+            {% for error in errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    </article>
+    {% endif %}

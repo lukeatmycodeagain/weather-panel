@@ -1,0 +1,7 @@
+{% extends "layouts/main" %} {% block content %}
+    <h1>What's the weather like?</h1>
+    
+    {% include "components/error_display" %}
+    {% include "components/weather_query" %}
+    {% include "components/weather_view" %}
+{% endblock content %}

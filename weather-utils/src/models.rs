@@ -1,13 +1,12 @@
-
-use rocket::{FromForm};
-use rocket::form::{self,Error};
+use rocket::form::{self, Error};
+use rocket::FromForm;
 
 #[derive(FromForm, Debug)]
 pub struct WeatherQuery {
     #[field(validate = validate_latitude())]
     pub latitude: f64,
     #[field(validate= validate_longitude())]
-    pub longitude:f64,
+    pub longitude: f64,
 }
 
 fn validate_latitude<'v>(lat: &f64) -> form::Result<'v, ()> {
@@ -26,11 +25,9 @@ fn validate_longitude<'v>(long: &f64) -> form::Result<'v, ()> {
     }
 }
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Weather{
+pub struct Weather {
     pub time: String,
-    pub temperature: f64
+    pub temperature: f64,
 }
-
-

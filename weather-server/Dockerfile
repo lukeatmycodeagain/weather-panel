@@ -21,7 +21,11 @@ RUN apt-get update && apt-get install -y \
 ENV ROCKET_PORT="8000"
 ENV IS_CONTAINER="true"
 
+WORKDIR /usr/src/app/weather-server
+
 COPY --from=builder /usr/src/app/weather-server/target/release/weather-server .
+COPY --from=builder /usr/src/app/weather-server/templates ./templates
+COPY --from=builder /usr/src/app/weather-server/public ./public
 
 EXPOSE 8000
 

@@ -1,14 +1,30 @@
 
 use rocket::{FromForm};
+use rocket::form::{self,Error};
 
 #[derive(FromForm, Debug)]
-pub struct Person {
-    #[field(validate=len(1..))]
-    pub first_name: String,
-    #[field(validate=len(1..))]
-    pub last_name: String,
+pub struct WeatherQuery {
+    #[field(validate = validate_latitude())]
+    pub latitude: f64,
+    #[field(validate= validate_longitude())]
+    pub longitude:f64,
 }
 
+fn validate_latitude<'v>(lat: &f64) -> form::Result<'v, ()> {
+    if *lat < -90.0 || *lat > 90.0 {
+        Err(Error::validation("latitude must be between -90.0 and 90.0").into())
+    } else {
+        Ok(())
+    }
+}
+
+fn validate_longitude<'v>(long: &f64) -> form::Result<'v, ()> {
+    if *long < -180.0 || *long > 180.0 {
+        Err(Error::validation("longitude must be between -180.0 and 180.0").into())
+    } else {
+        Ok(())
+    }
+}
 
 use serde::{Serialize, Deserialize};
 #[derive(Debug, Serialize, Deserialize)]
@@ -16,3 +32,5 @@ pub struct Weather{
     pub time: String,
     pub temperature: f64
 }
+
+

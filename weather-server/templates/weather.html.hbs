@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light dark"/>
     <link rel="stylesheet" href="/public/css/pico.min.css">
-    <title>Hello world!</title>
+    <title>{{ title }}</title>
 </head>
 <body>
 <main class="container">
-    <h1>Hello Rust!</h1>
+    <h1>What's the weather like?</h1>
     {{#if errors }}
         <article>
             <header>🥺Oh No!</header>
@@ -21,22 +21,22 @@
             </ul>
         </article>
     {{/if}}
-    <form method="POST" enctype="multipart/form-data" action="/">
+    <form method="POST"  action="/weather">
         <input type="text"
-               name="first_name"
-               placeholder="First Name"
-               aria-label="First Name"
-               value="{{ first_name }}"
-               aria-invalid="{{ first_name_error}}"
+               name="latitude"
+               placeholder="Latitude"
+               aria-label="Latitude"
+               value="{{ latitude }}"
+               aria-invalid="{{ latitude_error}}"
         />
-        <input type="text" name="last_name"
-               placeholder="Last Name"
-               aria-label="Last Name"
-               value="{{ last_name }}"
-               aria-invalid="{{ last_name_error}}"
+        <input type="text" name="longitude"
+               placeholder="Longitude"
+               aria-label="Longitude"
+               value="{{ longitude }}"
+               aria-invalid="{{ longitude_error}}"
         />
         
-        <button type="submit">Say Hello</button>
+        <button type="submit">View Weather</button>
     </form>
 </main>
 </body>

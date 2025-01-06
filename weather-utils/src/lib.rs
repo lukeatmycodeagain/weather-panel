@@ -5,7 +5,7 @@ use std::{
 
 // shared data models
 pub mod models;
-pub use models::Person;
+pub use models::WeatherQuery;
 pub use models::Weather;
 
 pub fn ip_configuration() -> IpAddr {

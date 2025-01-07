@@ -19,6 +19,7 @@ cd ~/weather/weather-server && cargo run
 ```
 
 ## Containers
+
 ### Build Docker Images:
 Run the following commands from the root directory:  
 ```bash
@@ -30,3 +31,4 @@ Alternatively, use Docker Compose to build and run the services:
 ```bash
 docker-compose up --build
 ```
+Make sure to define the environment in `.env`, adjacent to the `docker-compose.yaml` file

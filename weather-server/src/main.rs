@@ -35,7 +35,6 @@ fn rocket() -> _ {
             "/",
             routes![root, weather, create_weather_query, display_weather],
         )
-        //.mount("/weather", routes![weather, create_weather_query]) // TODO: Figure out why this doesn't
         .register("/", catchers![not_found])
         .configure(rocket::Config {
             address,
@@ -54,15 +53,11 @@ fn not_found() -> &'static str {
     "Page not found"
 }
 
-/* #[get("/favicon.ico")]
-fn favicon() -> rocket::response::NamedFile {
-    rocket::response::NamedFile::open("favicon/favicon.ico").unwrap() // Adjust the path accordingly
-} */
 #[get("/weather")]
 async fn weather() -> Template {
     Template::render(
         "weather",
-        context! { title: "Weather", longitude: "", longitude_error:"", latitude:"", latitude_error: "", lat: "", long: "", message: ""},
+        context! { title: "Weather", longitude: "", longitude_error:"", latitude:"", latitude_error: "", lat: "", long: "", message: "", weather: {}},
     )
 }
 
@@ -164,8 +159,6 @@ async fn display_weather(lat: f64, long: f64) -> Template {
             }
         }
         _ => {
-            println!("got a bad request back!!");
-
             Template::render(
                 "weather",
                 context! {

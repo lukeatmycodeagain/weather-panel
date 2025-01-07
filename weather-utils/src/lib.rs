@@ -10,7 +10,6 @@ pub use models::WeatherQuery;
 
 pub fn ip_configuration() -> IpAddr {
     let is_container = get_env_var("IS_CONTAINER", false);
-    println!("IS_CONTAINER: {}", is_container); // Debugging
 
     let address: IpAddr = if is_container {
         IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)) // Bind to all interfaces (0.0.0.0)

@@ -43,16 +43,19 @@ fn rocket() -> _ {
         })
 }
 
+// web app entrypoint
 #[get("/")]
 async fn root() -> Template {
     Template::render("root", context! { message: "My Projects"})
 }
 
+// 404 catchall
 #[catch(404)]
 fn not_found() -> &'static str {
     "Page not found"
 }
 
+// entrypoint to the weather microservice
 #[get("/weather")]
 async fn weather() -> Template {
     Template::render(
@@ -61,6 +64,7 @@ async fn weather() -> Template {
     )
 }
 
+// handles posts from forms at the weather endpoint, populates display fields with results from succesful queries
 #[post("/weather", data = "<form>")]
 async fn create_weather_query(
     form: Form<Contextual<'_, WeatherQuery>>,
@@ -100,6 +104,7 @@ async fn create_weather_query(
     ))
 }
 
+// displays the weather at a given lat and long
 #[get("/weather?<lat>&<long>")]
 async fn display_weather(lat: f64, long: f64) -> Template {
     let endpoint = microservice_endpoint(Microservice::Weather);
@@ -177,6 +182,7 @@ async fn display_weather(lat: f64, long: f64) -> Template {
     }
 }
 
+// helper function to configure the server based on environment
 fn server_config() -> (IpAddr, u16) {
     let address = weather_utils::ip_configuration();
     // Set the port using the ROCKET_PORT environment variable, defaulting to 8000 if not set
@@ -184,6 +190,7 @@ fn server_config() -> (IpAddr, u16) {
     (address, port)
 }
 
+// helper function to get endpoints of microservices, for easy additions down the road
 fn microservice_endpoint(service: Microservice) -> String {
     match service {
         Microservice::Weather => weather_endpoint(),
@@ -191,6 +198,7 @@ fn microservice_endpoint(service: Microservice) -> String {
     }
 }
 
+// helper function to direct the web server to the weather microservice
 fn weather_endpoint() -> String {
     // Set the port using the WEATHER_MICROSERVICE_PORT environment variable, defaulting to 8080 if not set
     let port: u16 = weather_utils::get_env_var("WEATHER_MICROSERVICE_PORT", 8080);
@@ -200,6 +208,7 @@ fn weather_endpoint() -> String {
     endpoint
 }
 
+// catch all default endpoint
 fn default_endpoint() -> String {
     format!("{}:{}", IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), 8000)
 }

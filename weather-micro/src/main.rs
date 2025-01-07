@@ -16,21 +16,24 @@ enum Query {
 
 #[tokio::main]
 async fn main() {
+    // get environment files
     dotenv().ok();
     let address = weather_utils::ip_configuration();
     let port: u16 = weather_utils::get_env_var("WEATHER_MICROSERVICE_PORT", 8080);
 
     let make_svc =
         make_service_fn(|_conn| async { Ok::<_, Infallible>(service_fn(handle_request)) });
-    let addr = (address, port).into();
+    let socket_address = (address, port).into();
 
-    let server = Server::bind(&addr).serve(make_svc);
+    // bind the socket and service to run the server
+    let server = Server::bind(&socket_address).serve(make_svc);
 
     if let Err(e) = server.await {
         eprintln!("Microservice error: {}", e);
     }
 }
 
+// response handler for incoming HTTP requests
 async fn handle_request(req: Request<Body>) -> Result<Response<Body>, Infallible> {
     // Handle only `/` requests for weather data
     if req.uri().path() == "/" {
@@ -45,6 +48,7 @@ async fn handle_request(req: Request<Body>) -> Result<Response<Body>, Infallible
             }
         };
 
+        // handle result of query to get the response
         let response = match result {
             Ok(weather) => Response::builder()
                 .status(200)
@@ -57,7 +61,7 @@ async fn handle_request(req: Request<Body>) -> Result<Response<Body>, Infallible
                 .unwrap(),
         };
 
-        // Apply CORS headers, TODO: what is CORS, why does it matter, how does it affect production environments
+        // Apply CORS headers, TODO: what is CORS, why does it matter, how does it affect production environments, security implications?
         let mut response = response;
         response
             .headers_mut()
@@ -81,6 +85,7 @@ async fn handle_request(req: Request<Body>) -> Result<Response<Body>, Infallible
         .unwrap())
 }
 
+// handles weather queries and forms the Weather response object
 async fn handle_weather_query(query: weather_utils::WeatherQuery) -> Result<Weather, String> {
     let api_key = weather_utils::get_env_var("OPEN_WEATHER_API", "".to_string());
     let api_url = format!(
@@ -93,7 +98,9 @@ async fn handle_weather_query(query: weather_utils::WeatherQuery) -> Result<Weat
 
     let result = match res {
         Ok(response) => {
+            // get the json response
             let external_data =  parse_response_to_json(response).await?;
+            // lookup the location name based on the lat/long
             let location_name =
                 match get_location_name(api_key, query.latitude, query.longitude).await {
                     Ok(name) => name,
@@ -111,6 +118,10 @@ async fn handle_weather_query(query: weather_utils::WeatherQuery) -> Result<Weat
     result
 }
 
+// use a reverse geocoding service to determine if the lat/long point to any named place
+// this could be deployed as another microservice, and would need to be injected into this 
+// function, alternatively, the main web server could handle calls to both services and combine 
+// the results like I do in the pack_weather method. 
 async fn get_location_name(
     api_key: String,
     latitude: f64,
@@ -123,12 +134,14 @@ async fn get_location_name(
 
     let result = match call {
         Ok(response) => {
+            // get the json from the body
             let external_data = parse_response_to_json(response).await?;
+            // expect json to be an array
             if let Some(result) = external_data.as_array() {
                 if result.is_empty() {
                     return Ok("... I dunno, the ocean or a desert maybe?".to_string());
                 } else {
-                    // this should be improved in the future when I feel like pulling my hair out over Strings
+                    // this should be improved in the future when I feel like pulling dealing with Strings
                     let location_trim = result[0]["name"]
                         .to_string()
                         .trim()
@@ -151,6 +164,7 @@ async fn get_location_name(
     result
 }
 
+// dedicated function provides a way to inject whatever http crate I want to use for external calls. 
 async fn call_external(url: String) -> Result<Response<Body>, String> {
     let client = Client::new();
     let url: Uri = url.parse::<Uri>().map_err(|e| e.to_string())?;
@@ -158,6 +172,7 @@ async fn call_external(url: String) -> Result<Response<Body>, String> {
     return response;
 }
 
+// this logic is unweidly, so I've extracted it to a dedicated function for easier changes and troubleshooting
 async fn parse_response_to_json(response: Response<Body>) -> Result<Value, String> {
     let body_bytes = to_bytes(response.into_body())
         .await
@@ -167,6 +182,7 @@ async fn parse_response_to_json(response: Response<Body>) -> Result<Value, Strin
     Ok(external_data)
 }
 
+// helper for creating a weather object
 fn pack_weather(data: Value, location: String) -> Weather {
     return Weather {
         time: convert_to_human(data["current"]["dt"].to_string()),
@@ -181,6 +197,7 @@ fn pack_weather(data: Value, location: String) -> Weather {
     };
 }
 
+// convert Unix time to human readable
 fn convert_to_human(unix_time: String) -> String {
     let unix_seconds: i64 = unix_time.parse().unwrap_or(0); // Example Unix timestamp (in seconds)
 
